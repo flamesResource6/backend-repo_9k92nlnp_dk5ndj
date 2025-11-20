@@ -7,7 +7,7 @@ from typing import List, Optional
 from database import db, create_document, get_documents
 from schemas import Player, Milestone, Reward
 
-app = FastAPI(title="Misión AMVISION 10K API", version="1.0.0")
+app = FastAPI(title="Misión AMVISION 10K API", version="1.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,17 +54,24 @@ class BootstrapResponse(BaseModel):
 
 @app.post("/api/bootstrap", response_model=BootstrapResponse)
 def bootstrap():
-    """Idempotently ensure a base set of milestones exists."""
+    """Idempotently ensure the mission milestone catalog exists."""
     if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
 
     existing = {m.get("milestone_id") for m in db["milestone"].find({}, {"milestone_id": 1})}
+    # Updated catalog based on user-provided milestones
     catalog = [
-        {"milestone_id": "m1", "title": "Define tu nicho", "description": "Segmento, competencia, propuesta de valor.", "order": 1},
-        {"milestone_id": "m2", "title": "Catálogo base", "description": "3-5 productos iniciales.", "order": 2},
-        {"milestone_id": "m3", "title": "Checkout y pagos", "description": "Medios de pago activos.", "order": 3},
-        {"milestone_id": "m4", "title": "Primera campaña", "description": "Tráfico inicial y píxel instalado.", "order": 4},
-        {"milestone_id": "m5", "title": "Primeras ventas", "description": "Validación de mercado.", "order": 5},
+        {"milestone_id": "m1",  "title": "Email y WhatsApp de Bienvenida es Enviado",              "order": 1},
+        {"milestone_id": "m2",  "title": "Formulario de Onboarding es completado",                  "order": 2},
+        {"milestone_id": "m3",  "title": "Llamada de Onboarding es llamada completada",             "order": 3},
+        {"milestone_id": "m4",  "title": "Status es Producto Ganador",                               "order": 4},
+        {"milestone_id": "m5",  "title": "Status es Elegido Proveedor",                              "order": 5},
+        {"milestone_id": "m6",  "title": "Status es Confirmado",                                     "order": 6},
+        {"milestone_id": "m7",  "title": "Tienda, Status es Creada",                                 "order": 7},
+        {"milestone_id": "m8",  "title": "Business Manager Status es Creado",                        "order": 8},
+        {"milestone_id": "m9",  "title": "Primeros ADS Subidos",                                     "order": 9},
+        {"milestone_id": "m10", "title": "🔥 Primera Venta",                                          "order": 10},
+        {"milestone_id": "m11", "title": "😍 $1.000USD Facturación",                                  "order": 11},
     ]
     created = 0
     for item in catalog:
