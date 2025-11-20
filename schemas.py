@@ -1,48 +1,43 @@
 """
-Database Schemas
+Database Schemas for Misión AMVISION 10K
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model maps to a MongoDB collection (lowercased class name).
+Use these to validate incoming data and to help the database viewer.
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
+from datetime import datetime
 
-# Example schemas (replace with your own):
-
-class User(BaseModel):
+class Player(BaseModel):
     """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
+    Collection: "player"
+    Represents a user participating in the mission program.
     """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    name: str = Field(..., description="Player full name")
+    email: EmailStr = Field(..., description="Unique email for the player")
+    av_coins: int = Field(0, ge=0, description="Reward currency balance")
+    revenue_usd: float = Field(0, ge=0, description="Accumulated revenue in USD")
+    completed_milestones: List[str] = Field(default_factory=list, description="IDs of completed milestones")
+    unlocked_worlds: List[str] = Field(default_factory=list, description="Unlocked worlds/upsells")
 
-class Product(BaseModel):
+class Milestone(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Collection: "milestone"
+    Static catalog of program milestones.
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    milestone_id: str = Field(..., description="Stable ID, e.g., 'm1'")
+    title: str
+    description: Optional[str] = None
+    order: int = Field(..., ge=1, description="Display order")
 
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Reward(BaseModel):
+    """
+    Collection: "reward"
+    Tracks coin grants for audit/history.
+    """
+    player_id: str
+    milestone_id: Optional[str] = None
+    reason: str = Field(..., description="Why the reward was granted")
+    coins: int = Field(..., ge=0)
+    created_at: Optional[datetime] = None
